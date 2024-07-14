@@ -156,43 +156,54 @@ public class StringsComparator {
      * @param end2  the end of the second sequence to be compared
      * @param script the edited script
      */
-    private void buildScript(final int start1, final int end1, final int start2, final int end2,
-            final EditScript<Character> script) {
-        final Snake middle = getMiddleSnake(start1, end1, start2, end2);
+    private static class BuildScriptParams {
+        final int start1;
+        final int end1;
+        final int start2;
+        final int end2;
+        final EditScript<Character> script;
+
+        public BuildScriptParams(int start1, int end1, int start2, int end2, EditScript<Character> script) {
+            this.start1 = start1;
+            this.end1 = end1;
+            this.start2 = start2;
+            this.end2 = end2;
+            this.script = script;
+        }
+    }
+    private void buildScript(BuildScriptParams params) {
+        final Snake middle = getMiddleSnake(params.start1, params.end1, params.start2, params.end2);
 
         if (middle == null
-                || middle.getStart() == end1 && middle.getDiag() == end1 - end2
-                || middle.getEnd() == start1 && middle.getDiag() == start1 - start2) {
+            || middle.getStart() == params.end1 && middle.getDiag() == params.end1 - params.end2
+            || middle.getEnd() == params.start1 && middle.getDiag() == params.start1 - params.start2) {
 
-            int i = start1;
-            int j = start2;
-            while (i < end1 || j < end2) {
-                if (i < end1 && j < end2 && left.charAt(i) == right.charAt(j)) {
-                    script.append(new KeepCommand<>(left.charAt(i)));
+            int i = params.start1;
+            int j = params.start2;
+            while (i < params.end1 || j < params.end2) {
+                if (i < params.end1 && j < params.end2 && left.charAt(i) == right.charAt(j)) {
+                    params.script.append(new KeepCommand<>(left.charAt(i)));
                     ++i;
                     ++j;
-                } else if (end1 - start1 > end2 - start2) {
-                    script.append(new DeleteCommand<>(left.charAt(i)));
+                } else if (params.end1 - params.start1 > params.end2 - params.start2) {
+                    params.script.append(new DeleteCommand<>(left.charAt(i)));
                     ++i;
                 } else {
-                    script.append(new InsertCommand<>(right.charAt(j)));
+                    params.script.append(new InsertCommand<>(right.charAt(j)));
                     ++j;
                 }
             }
-
         } else {
-
-            buildScript(start1, middle.getStart(),
-                        start2, middle.getStart() - middle.getDiag(),
-                        script);
+            buildScript(new BuildScriptParams(params.start1, middle.getStart(),
+                params.start2, middle.getStart() - middle.getDiag(), params.script));
             for (int i = middle.getStart(); i < middle.getEnd(); ++i) {
-                script.append(new KeepCommand<>(left.charAt(i)));
+                params.script.append(new KeepCommand<>(left.charAt(i)));
             }
-            buildScript(middle.getEnd(), end1,
-                        middle.getEnd() - middle.getDiag(), end2,
-                        script);
+            buildScript(new BuildScriptParams(middle.getEnd(), params.end1,
+                middle.getEnd() - middle.getDiag(), params.end2, params.script));
         }
     }
+
 
     /**
      * Builds a snake.
@@ -319,8 +330,9 @@ public class StringsComparator {
      */
     public EditScript<Character> getScript() {
         final EditScript<Character> script = new EditScript<>();
-        buildScript(0, left.length(), 0, right.length(), script);
+        buildScript(new BuildScriptParams(0, left.length(), 0, right.length(), script));
         return script;
     }
+
 
 }
