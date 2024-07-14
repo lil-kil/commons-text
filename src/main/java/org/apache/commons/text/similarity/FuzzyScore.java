@@ -98,7 +98,7 @@ public class FuzzyScore {
         int termIndex = 0;
 
         // index of the previously matched character in the term
-        int previousMatchingCharacterIndex = Integer.MIN_VALUE;
+        int lastMatchIndex = Integer.MIN_VALUE;
 
         for (int queryIndex = 0; queryIndex < queryLowerCase.length(); queryIndex++) {
             final char queryChar = queryLowerCase.charAt(queryIndex);
@@ -114,11 +114,11 @@ public class FuzzyScore {
 
                     // subsequent character matches further improve
                     // the score.
-                    if (previousMatchingCharacterIndex + 1 == termIndex) {
+                    if (lastMatchIndex + 1 == termIndex) {
                         score += 2;
                     }
 
-                    previousMatchingCharacterIndex = termIndex;
+                    lastMatchIndex = termIndex;
 
                     // we can leave the nested loop. Every character in the
                     // query can match at most one character in the term.
